@@ -1,0 +1,23 @@
+storage:
+  sqlite_path: "./qq-bridge.sqlite"
+
+turntf:
+  base_url: "http://127.0.0.1:8080"
+  bridge_user:
+    node_id: 4096
+    user_id: 1200
+    password:
+      source: plain
+      value: bridge-password
+
+backend:
+  kind: napcat
+  napcat:
+    ws_url: "ws://127.0.0.1:3001/"
+    access_token: ""
+    self_id: "20000"
+  qqbot:
+    app_id: ""
+    token: ""
+    secret: ""
+    sandbox: false

@@ -1,0 +1,9 @@
+
+bin/
+dist/
+*.db
+*.sqlite
+*.log
+coverage.out
+go.work
+go.work.sum
