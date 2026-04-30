@@ -141,6 +141,68 @@ go build -o turntf-qq-bridge ./cmd/turntf-qq-bridge
 
 桥接器监听 `SIGINT` 和 `SIGTERM` 信号，收到信号后执行优雅关闭：取消 context，等待三个并发循环退出。
 
+### 4.7 Docker 部署
+
+从 GitHub Container Registry 拉取预构建镜像：
+
+```bash
+docker pull ghcr.io/tursom/turntf-qq-bridge:latest
+```
+
+运行容器：
+
+```bash
+docker run -d \
+  --name turntf-qq-bridge \
+  -v $(pwd)/config.yaml:/etc/qq-bridge/config.yaml:ro \
+  -v $(pwd)/data:/data \
+  ghcr.io/tursom/turntf-qq-bridge:latest \
+  -config /etc/qq-bridge/config.yaml
+```
+
+**挂载说明**：
+
+| 挂载 | 用途 |
+|------|------|
+| `config.yaml` | 配置文件（只读），路径需与 `-config` 参数一致 |
+| `data` 目录 | SQLite 数据库持久化目录，需与配置中的 `sqlite_path` 对应 |
+
+**本地构建**：
+
+```bash
+docker build -t turntf-qq-bridge .
+```
+
+**Docker Compose 部署**：
+
+```yaml
+# docker-compose.yml
+version: "3.8"
+
+services:
+  qq-bridge:
+    image: ghcr.io/tursom/turntf-qq-bridge:latest
+    container_name: turntf-qq-bridge
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/etc/qq-bridge/config.yaml:ro
+      - ./data:/data
+    command: -config /etc/qq-bridge/config.yaml
+```
+
+启动与停止：
+
+```bash
+# 后台启动
+docker compose up -d
+
+# 查看日志
+docker compose logs -f
+
+# 停止
+docker compose down
+```
+
 ---
 
 ## 5. 配置文件详解
