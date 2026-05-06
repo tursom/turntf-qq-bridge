@@ -21,3 +21,17 @@ backend:
     token: ""
     secret: ""
     sandbox: false
+
+# relay 配置可选：将入站事件转发到其他 bridge 用户，实现跨平台桥接
+# relay:
+#   peer_bridges:
+#     - peer_node_id: 4096
+#       peer_user_id: 1201
+#       from_conversation:    # 匹配入站事件的会话，匹配则转发
+#         platform: "qq"
+#         scene: "group"
+#         chat_id: "YOUR_QQ_GROUP_ID"
+#       to_conversation:      # 转发时改写为此会话（对端平台）
+#         platform: "steam"
+#         scene: "private"
+#         chat_id: "YOUR_STEAM_USER_ID"

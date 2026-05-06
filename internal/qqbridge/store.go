@@ -27,6 +27,7 @@ var nowFunc = time.Now
 type Store struct {
 	db         *sql.DB
 	bridgeUser turntf.UserRef
+	relayCfg   RelayConfig
 }
 
 type GatewayInboundEvent struct {
@@ -56,7 +57,7 @@ type TurnTFDeliveryJob struct {
 	LastError string
 }
 
-func OpenStore(path string, bridgeUser turntf.UserRef) (*Store, error) {
+func OpenStore(path string, bridgeUser turntf.UserRef, relayCfg RelayConfig) (*Store, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, fmt.Errorf("sqlite path is required")
 	}
@@ -76,6 +77,7 @@ func OpenStore(path string, bridgeUser turntf.UserRef) (*Store, error) {
 	return &Store{
 		db:         db,
 		bridgeUser: bridgeUser,
+		relayCfg:   relayCfg,
 	}, nil
 }
 
@@ -367,6 +369,18 @@ func (s *Store) EnqueueInboundEvent(ctx context.Context, event GatewayInboundEve
 		for _, binding := range bindings {
 			jobKey := fmt.Sprintf("inbound:%d:%d:%d", inboundEventID, binding.NodeID, binding.UserID)
 			if err := s.enqueueTurnTFDeliveryTx(tx, jobKey, "inbound", binding, event.Envelope, nowMS); err != nil {
+				return err
+			}
+		}
+
+		for pi, peer := range s.relayCfg.PeerBridges {
+			if !event.Envelope.ConversationRef.Matches(peer.FromConversation) {
+				continue
+			}
+			relayEnv := event.Envelope.WithConversation(peer.ToConversation)
+			jobKey := fmt.Sprintf("relay:%d:%d:%d:%d", inboundEventID, pi, peer.PeerNodeID, peer.PeerUserID)
+			target := turntf.UserRef{NodeID: peer.PeerNodeID, UserID: peer.PeerUserID}
+			if err := s.enqueueTurnTFDeliveryTx(tx, jobKey, "relay", target, relayEnv, nowMS); err != nil {
 				return err
 			}
 		}

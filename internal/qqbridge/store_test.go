@@ -124,7 +124,7 @@ func TestStoreInvalidBridgeMessageQueuesReceipt(t *testing.T) {
 
 func openTestBridgeStore(t *testing.T) *Store {
 	t.Helper()
-	store, err := OpenStore(filepath.Join(t.TempDir(), "bridge.sqlite"), turntf.UserRef{NodeID: 4096, UserID: 1099})
+	store, err := OpenStore(filepath.Join(t.TempDir(), "bridge.sqlite"), turntf.UserRef{NodeID: 4096, UserID: 1099}, RelayConfig{})
 	if err != nil {
 		t.Fatalf("OpenStore: %v", err)
 	}

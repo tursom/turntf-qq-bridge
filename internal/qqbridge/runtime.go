@@ -26,7 +26,7 @@ func Run(ctx context.Context, cfg Config, logger *log.Logger) error {
 	if logger == nil {
 		logger = log.Default()
 	}
-	store, err := OpenStore(cfg.Storage.SQLitePath, cfg.BridgeUserRef())
+	store, err := OpenStore(cfg.Storage.SQLitePath, cfg.BridgeUserRef(), cfg.Relay)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,18 @@ type Config struct {
 	Storage StorageConfig `yaml:"storage"`
 	TurnTF  TurnTFConfig  `yaml:"turntf"`
 	Backend BackendConfig `yaml:"backend"`
+	Relay   RelayConfig   `yaml:"relay"`
+}
+
+type RelayConfig struct {
+	PeerBridges []PeerBridgeConfig `yaml:"peer_bridges"`
+}
+
+type PeerBridgeConfig struct {
+	PeerNodeID      int64                `yaml:"peer_node_id"`
+	PeerUserID      int64                `yaml:"peer_user_id"`
+	FromConversation ConversationRef     `yaml:"from_conversation"`
+	ToConversation   ConversationRef     `yaml:"to_conversation"`
 }
 
 type StorageConfig struct {
@@ -136,6 +148,18 @@ func (c Config) Validate() error {
 		}
 	default:
 		return fmt.Errorf("backend.kind must be napcat or qqbot")
+	}
+
+	for i, peer := range c.Relay.PeerBridges {
+		if peer.PeerNodeID == 0 || peer.PeerUserID == 0 {
+			return fmt.Errorf("relay.peer_bridges[%d].peer_node_id and peer_user_id are required", i)
+		}
+		if err := peer.FromConversation.NormalizeAndValidate(); err != nil {
+			return fmt.Errorf("relay.peer_bridges[%d].from_conversation: %w", i, err)
+		}
+		if err := peer.ToConversation.NormalizeAndValidate(); err != nil {
+			return fmt.Errorf("relay.peer_bridges[%d].to_conversation: %w", i, err)
+		}
 	}
 	return nil
 }

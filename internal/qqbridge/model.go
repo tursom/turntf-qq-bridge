@@ -50,10 +50,10 @@ type BridgeEnvelope struct {
 }
 
 type ConversationRef struct {
-	Platform string            `json:"platform,omitempty"`
-	Scene    ConversationScene `json:"scene"`
-	ChatID   string            `json:"chat_id"`
-	ThreadID string            `json:"thread_id,omitempty"`
+	Platform string            `json:"platform,omitempty" yaml:"platform,omitempty"`
+	Scene    ConversationScene `json:"scene"              yaml:"scene"`
+	ChatID   string            `json:"chat_id"            yaml:"chat_id"`
+	ThreadID string            `json:"thread_id,omitempty" yaml:"thread_id,omitempty"`
 }
 
 type Content struct {
@@ -129,9 +129,6 @@ func (r *ConversationRef) NormalizeAndValidate() error {
 	if r.Platform == "" {
 		r.Platform = "qq"
 	}
-	if r.Platform != "qq" {
-		return fmt.Errorf("unsupported conversation_ref.platform %q", r.Platform)
-	}
 	switch r.Scene {
 	case ConversationSceneGroup, ConversationScenePrivate:
 	default:
@@ -156,6 +153,30 @@ func (r ConversationRef) Key() string {
 func (r ConversationRef) Hash() string {
 	sum := sha256.Sum256([]byte(r.Key()))
 	return hex.EncodeToString(sum[:])
+}
+
+// Matches returns true if the receiver matches the pattern.
+// A field in the pattern is considered "match anything" when it is empty (zero value).
+// platform and scene are always compared exactly.
+func (r ConversationRef) Matches(pattern ConversationRef) bool {
+	if r.Platform != pattern.Platform {
+		return false
+	}
+	if r.Scene != pattern.Scene {
+		return false
+	}
+	if pattern.ChatID != "" && r.ChatID != pattern.ChatID {
+		return false
+	}
+	if pattern.ThreadID != "" && r.ThreadID != pattern.ThreadID {
+		return false
+	}
+	return true
+}
+
+func (e BridgeEnvelope) WithConversation(conv ConversationRef) BridgeEnvelope {
+	e.ConversationRef = conv
+	return e
 }
 
 func (c *Content) NormalizeAndValidate() error {
